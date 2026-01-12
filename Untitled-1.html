@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>نظام شركة بيان – يومي باسم المندوب</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
+<style>
+:root{
+    --primary:#0B5ED7;
+    --primary-dark:#084298;
+    --bg:#F5F7FA;
+    --card:#FFFFFF;
+    --text:#212529;
+    --muted:#6C757D;
+    --success:#198754;
+    --danger:#DC3545;
+    --radius:12px;
+}
+
+/* reset */
+*{
+    box-sizing:border-box;
+    font-family:"Segoe UI", Tahoma, Arial, sans-serif;
+}
+
+body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    direction:rtl;
+}
+
+/* app wrapper */
+#app{
+    max-width:1200px;
+    margin:30px auto;
+    background:var(--card);
+    padding:30px;
+    border-radius:var(--radius);
+    box-shadow:0 12px 30px rgba(0,0,0,.08);
+}
+
+/* title */
+#app h1{
+    text-align:center;
+    color:var(--primary-dark);
+    margin-bottom:30px;
+}
+
+/* top inputs */
+.top{
+    display:flex;
+    gap:20px;
+    flex-wrap:wrap;
+    margin-bottom:20px;
+}
+
+.top > div{
+    flex:1;
+    min-width:220px;
+}
+
+label{
+    display:block;
+    margin-bottom:6px;
+    font-size:14px;
+    color:var(--muted);
+}
+
+/* inputs */
+input[type="text"],
+input[type="date"],
+select,
+textarea{
+    width:100%;
+    padding:11px 14px;
+    border:1px solid #CED4DA;
+    border-radius:10px;
+    font-size:14px;
+}
+
+textarea{
+    min-height:90px;
+    resize:vertical;
+}
+
+input:focus,
+select:focus,
+textarea:focus{
+    outline:none;
+    border-color:var(--primary);
+    box-shadow:0 0 0 3px rgba(11,94,215,.15);
+}
+
+/* buttons */
+.top-buttons{
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+    margin:25px 0;
+}
+
+.top-buttons button{
+    padding:12px 18px;
+    border:none;
+    border-radius:10px;
+    font-size:14px;
+    cursor:pointer;
+    background:var(--primary);
+    color:#fff;
+    transition:.25s;
+}
+
+.top-buttons button:hover{
+    background:var(--primary-dark);
+}
+
+/* special buttons colors */
+.top-buttons button:nth-child(1){background:var(--success);}
+.top-buttons button:nth-child(5){background:var(--danger);}
+.top-buttons button:nth-child(2){background:#6C757D;}
+.top-buttons button:nth-child(3),
+.top-buttons button:nth-child(4){background:#0D6EFD;}
+
+/* form area */
+.container{
+    margin:25px 0;
+    border:1px solid #E9ECEF;
+    border-radius:var(--radius);
+    padding:20px;
+    background:#fff;
+}
+/* container للأقسام */
+#formArea{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(450px, 1fr));
+    gap:20px;
+    margin-top:25px;
+}
+
+/* كل صندوق قسم */
+.box{
+    background:#fff;
+    padding:20px;
+    border-radius:12px;
+    box-shadow:0 8px 20px rgba(0,0,0,.08);
+    display:flex;
+    flex-direction:column;
+}
+
+/* عنوان القسم */
+.box h2{
+    background:var(--primary);
+    color:#fff;
+    padding:10px;
+    border-radius:8px;
+    text-align:center;
+    font-size:16px;
+    margin-bottom:15px;
+}
+
+/* كل حقل داخل القسم */
+.field{
+    margin-bottom:12px;
+}
+
+.field label{
+    display:block;
+    font-size:14px;
+    color:var(--muted);
+    margin-bottom:4px;
+}
+
+.field input{
+    width:100%;
+    padding:10px 12px;
+    border:1px solid #CED4DA;
+    border-radius:8px;
+    font-size:14px;
+}
+
+.field input:focus{
+    outline:none;
+    border-color:var(--primary);
+    box-shadow:0 0 0 3px rgba(11,94,215,.15);
+}
+/* التقرير */
+#report{
+    margin-top:25px;
+    padding:20px;
+    background:#F8FAFC;
+    border:1px solid #E9ECEF;
+    border-radius:12px;
+    overflow-x:auto;
+}
+
+/* جدول التقرير */
+#report table{
+    width:100%;
+    border-collapse:collapse;
+    min-width:600px;
+}
+
+#report th, #report td{
+    padding:12px 14px;
+    border:1px solid #E9ECEF;
+    text-align:right;
+    font-size:14px;
+}
+
+#report th{
+    background:#0B5ED7;
+    color:#fff;
+    font-weight:600;
+    text-align:center;
+}
+
+#report tr:nth-child(even){
+    background:#F5F9FF;
+}
+
+#report tr:hover td{
+    background:#E3EEFF;
+}
+
+
+/* report box */
+#report{
+    margin-top:25px;
+    padding:20px;
+    background:#F8FAFC;
+    border:1px solid #E9ECEF;
+    border-radius:var(--radius);
+}
+
+/* print */
+@media print{
+    body *{
+        visibility: hidden;
+    }
+
+    #report, #report *{
+        visibility: visible;
+    }
+
+    #report{
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        background: #fff;
+        padding: 20px;
+    }
+}
+
+
+</style>
+</head>
+
+<body>
+<div id="app">
+
+<h1>شركة بيان – نظام الإجراءات الحكومية</h1>
+
+<div class="top">
+    <div>
+        <label>📅 الأيام المسجلة:</label>
+        <select id="daysList"></select>
+    </div>
+    <div>
+        <label>📅 التاريخ:</label>
+        <input type="date" id="day">
+    </div>
+</div>
+
+<div class="top-buttons">
+<button onclick="saveData()">💾 حفظ اليوم</button>
+<button onclick="window.print()">🖨️ طباعة</button>
+<button onclick="showReport()">📊 تقرير اليوم</button>
+<button onclick="showAllReport()">📊 تقرير كل الأيام</button>
+<button onclick="deleteDay()">🗑️ مسح اليوم</button>
+<button onclick="exportPDF()">📄 تصدير PDF لكل الأيام</button>
+<button onclick="exportDailyPDF()">📄 تصدير PDF ليوم واحد</button>
+</div>
+
+<label>👤 اسم المندوب:</label>
+<input type="text" id="employeeName">
+
+<div class="container" id="formArea"></div>
+
+<h3>ملاحظات عامة</h3>
+<textarea id="notes"></textarea>
+
+<div id="report"></div>
+
+</div>
+
+<script>
+/* ===== المتغيرات ===== */
+const dayInput = document.getElementById("day");
+const daysList = document.getElementById("daysList");
+const employeeInput = document.getElementById("employeeName");
+const notes = document.getElementById("notes");
+const report = document.getElementById("report");
+
+/* ===== الأقسام ===== */
+const sections={
+"وزارة الصحة":["موعد كشف طبي أول مرة","إعادة الكشف الطبي","تجديد تأمين صحي","فصيلة الدم"],
+"وزارة الداخلية – شؤون الإقامة":["مخالفات الإقامة","إصدار فيزا","إقامة أول مرة","تجديد الإقامة","إقامة مؤقتة","البصمة"],
+"بلدية الكويت":["إعلان بلدية أول مرة","حجز سيارات البلدية","تجديد إعلان بلدية","تجديد كرت البلدية","كرت بلدية أول مرة"],
+"المعلومات المدنية":["تغيير عنوان البطاقة","بطاقة مدنية أول مرة","تجديد بطاقة مدنية"],
+"هيئة الغذاء":["كرت هيئة الغذاء أول مرة","تجديد كرت هيئة الغذاء"],
+"الإطفاء":["إصدار ترخيص إطفاء","تجديد ترخيص إطفاء"],
+"وزارة الخارجية":["تصديقات الخارجية","تصديقات السفارة"],
+"المرور":[
+    "تجديد دفاتر مركبات","موعد الفحص الفني","تجديد دفاتر دراجات","فحص نظر أول مرة",
+    "استمارات أول مرة","إصدار الرخصة أول مرة","إعادة التراي","بلاغات الحوادث",
+    "تجديد الرخصة","سكراب سيارات","ختم التنسيق","حجز سيارات الداخلية",
+    "مخالفات المرور","فقدان دفتر مركبة","تحويل مركبات"
+],
+"القوى العاملة":[
+    "إذن عمل أول مرة","تصريح عمل","تجديد إذن عمل","إلغاء نهائي",
+    "إلغاء وتحويل","بلاغات وتغيب","شكاوي عمالية"
+],
+"شركات خاصة":[
+    "حجز تذاكر","ترجمة صحيفة جنائية","ترجمة رخصة","فتح حساب بنك",
+    "تأجير سيارات","إخلاء شقق","إخلاء مكاتب","تجديد تأمين مركبات",
+    "تجديد تأمين دراجات","استلام سيارات"
+]
+};
+
+const formArea=document.getElementById("formArea");
+for(let s in sections){
+    let box=document.createElement("div");
+    box.className="box";
+    box.innerHTML=`<h2>${s}</h2>`;
+    sections[s].forEach(f=>{
+        box.innerHTML+=`
+        <div class="field">
+            <label>${f}</label>
+            <input data-key="${s}-${f}">
+        </div>`;
+    });
+    formArea.appendChild(box);
+}
+
+/* ===== حفظ ===== */
+function saveData(){
+    let day=dayInput.value;
+    if(!day){alert("اختار التاريخ");return;}
+    let data={};
+    document.querySelectorAll("input[data-key]").forEach(i=>{
+        data[i.dataset.key]=i.value;
+    });
+    data.notes=notes.value;
+    localStorage.setItem("bayan-"+day,JSON.stringify(data));
+    updateDaysList();
+    alert("تم الحفظ");
+}
+
+/* ===== تحميل ===== */
+function loadDay(day){
+    if(!day) day=dayInput.value;
+    let data=JSON.parse(localStorage.getItem("bayan-"+day)||"{}");
+    document.querySelectorAll("input[data-key]").forEach(i=>{
+        i.value=data[i.dataset.key]||"";
+    });
+    notes.value=data.notes||"";
+}
+
+/* ===== التقارير ===== */
+function showReport(){
+    let day = dayInput.value;
+    let data = JSON.parse(localStorage.getItem("bayan-"+day) || "{}");
+
+    let html = `<h3>تقرير يوم ${day}</h3>`;
+    html += `<table>
+                <thead>
+                    <tr>
+                        <th>الإجراء</th>
+                        <th>القيمة</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+    for(let k in data){
+        html += `<tr>
+                    <td>${k}</td>
+                    <td>${data[k]}</td>
+                 </tr>`;
+    }
+
+    html += `</tbody></table>`;
+    report.innerHTML = html;
+}
+
+
+function showAllReport(){
+    let html="<h3>تقرير كل الأيام</h3><table><tr><th>اليوم</th><th>الإجراء</th><th>القيمة</th></tr>";
+    for(let i=0;i<localStorage.length;i++){
+        let key=localStorage.key(i);
+        if(key.startsWith("bayan-")){
+            let day=key.replace("bayan-","");
+            let data=JSON.parse(localStorage.getItem(key));
+            for(let k in data){
+                html+=`<tr><td>${day}</td><td>${k}</td><td>${data[k]}</td></tr>`;
+            }
+        }
+    }
+    html+="</table>";
+    report.innerHTML=html;
+}
+
+/* ===== حذف ===== */
+function deleteDay(){
+    let day=dayInput.value;
+    if(confirm("مسح بيانات "+day+"؟")){
+        localStorage.removeItem("bayan-"+day);
+        loadDay(day);
+        updateDaysList();
+    }
+}
+
+/* ===== القائمة ===== */
+function updateDaysList(){
+    daysList.innerHTML="";
+    Object.keys(localStorage).filter(k=>k.startsWith("bayan-")).sort().forEach(k=>{
+        let d=k.replace("bayan-","");
+        let o=document.createElement("option");
+        o.value=d;o.text=d;
+        daysList.appendChild(o);
+    });
+}
+daysList.onchange=()=>loadDay(daysList.value);
+
+/* ===== PDF يوم واحد ===== */
+function exportDailyPDF(){
+    try{
+        const { jsPDF } = window.jspdf;
+        let doc = new jsPDF("p","mm","a4");
+
+        let day = dayInput.value;
+        if(!day){
+            alert("اختار التاريخ");
+            return;
+        }
+
+        let employee = employeeInput.value || "غير محدد";
+        let data = JSON.parse(localStorage.getItem("bayan-"+day) || "{}");
+
+        // عنوان
+        doc.setFontSize(18);
+        doc.text(
+            "شركة بيان – تقرير الإجراءات الحكومية",
+            doc.internal.pageSize.getWidth()/2,
+            20,
+            {align:"center"}
+        );
+
+        doc.setFontSize(12);
+        doc.text("التاريخ: " + day, 190, 35, {align:"right"});
+        doc.text("اسم المندوب: " + employee, 190, 43, {align:"right"});
+
+        // البيانات
+        let rows=[];
+        for(let k in data){
+            if(data[k]) rows.push([k, data[k]]);
+        }
+
+        // جدول
+        doc.autoTable({
+            startY: 55,
+            head: [["الإجراء","القيمة"]],
+            body: rows,
+            styles:{
+                fontSize: 11,
+                halign: "right",
+                cellPadding: 4
+            },
+            headStyles:{
+                fillColor:[11,94,215],
+                halign:"center"
+            },
+            theme:"grid"
+        });
+
+        doc.save(`تقرير_${day}.pdf`);
+    }
+    catch(e){
+        console.error(e);
+        alert("حصل خطأ أثناء التصدير");
+    }
+}
+/* ===== PDF كل الأيام ===== */
+function exportPDF(){
+    try{
+        const { jsPDF } = window.jspdf;
+        let doc = new jsPDF("p","mm","a4");
+
+        // عنوان
+        doc.setFontSize(18);
+        doc.text(
+            "شركة بيان – تقرير كل الأيام",
+            doc.internal.pageSize.getWidth()/2,
+            20,
+            {align:"center"}
+        );
+
+        let startY = 35;
+
+        // المرور على كل الأيام
+        let keys = Object.keys(localStorage)
+            .filter(k => k.startsWith("bayan-"))
+            .sort();
+
+        if(keys.length === 0){
+            alert("لا توجد بيانات محفوظة");
+            return;
+        }
+
+        keys.forEach((key, index) => {
+            let day = key.replace("bayan-","");
+            let data = JSON.parse(localStorage.getItem(key) || "{}");
+
+            // عنوان اليوم
+            doc.setFontSize(14);
+            doc.text("📅 التاريخ: " + day, 190, startY, {align:"right"});
+            startY += 6;
+
+            let rows = [];
+            for(let k in data){
+                if(data[k]){
+                    rows.push([k, data[k]]);
+                }
+            }
+
+            // جدول اليوم
+            doc.autoTable({
+                startY: startY,
+                head: [["الإجراء","القيمة"]],
+                body: rows,
+                styles:{
+                    fontSize: 10,
+                    halign: "right",
+                    cellPadding: 4
+                },
+                headStyles:{
+                    fillColor:[11,94,215],
+                    halign:"center"
+                },
+                theme:"grid"
+            });
+
+            startY = doc.lastAutoTable.finalY + 10;
+
+            // صفحة جديدة لو مش آخر يوم
+            if(index < keys.length - 1){
+                doc.addPage();
+                startY = 20;
+            }
+        });
+
+        doc.save("تقرير_كل_الأيام.pdf");
+    }
+    catch(e){
+        console.error(e);
+        alert("حصل خطأ أثناء تصدير PDF");
+    }
+}
+
+/* ===== تشغيل ===== */
+dayInput.value=new Date().toISOString().split("T")[0];
+updateDaysList();
+loadDay();
+</script>
+
+</body>
+</html>
